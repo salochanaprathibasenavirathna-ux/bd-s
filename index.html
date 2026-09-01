@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Birthday! 🎈</title>
+  <!-- Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle, #2d132c, #1a0826, #0d0118);
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Screen Management with 3D Flip Transitions */
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      padding: 20px;
+      perspective: 1000px;
+      opacity: 0;
+      transform: rotateY(-90deg) scale(0.8);
+      transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .screen.active {
+      display: flex !important;
+      opacity: 1;
+      transform: rotateY(0deg) scale(1);
+    }
+
+    /* Ambient Lights */
+    .light {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 182, 193, 0.4);
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.8);
+      animation: float 6s infinite ease-in-out alternate;
+      pointer-events: none;
+    }
+
+    /* STEP 1: Intro Wish */
+    #step-1 h1 {
+      font-size: 3.5rem;
+      color: #ffb6c1;
+      text-shadow: 0 0 25px rgba(255, 105, 180, 0.8);
+      margin-bottom: 20px;
+    }
+
+    #step-1 p {
+      font-size: 1.6rem;
+      color: #f8f9fa;
+      max-width: 650px;
+      line-height: 1.6;
+    }
+
+    .progress-bar {
+      width: 250px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      margin-top: 35px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff758c, #ff7eb3);
+      animation: fillProgress 20s linear forwards;
+    }
+
+    /* STEP 2: Gift Box */
+    .gift-box {
+      width: 160px;
+      height: 160px;
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      position: relative;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(255, 65, 108, 0.7);
+      cursor: pointer;
+      animation: pulse 1.5s infinite;
+      transition: transform 0.3s;
+    }
+
+    .gift-box:hover {
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    .gift-ribbon-v {
+      position: absolute;
+      width: 32px;
+      height: 100%;
+      background: #ffd700;
+      left: 64px;
+    }
+
+    .gift-ribbon-h {
+      position: absolute;
+      width: 100%;
+      height: 32px;
+      background: #ffd700;
+      top: 64px;
+    }
+
+    /* PRESENT CARD STYLING (Pinkish Cute Girly Theme) */
+    .present-card {
+      background: rgba(255, 192, 203, 0.15);
+      padding: 40px;
+      border-radius: 25px;
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(255, 182, 193, 0.4);
+      max-width: 600px;
+      box-shadow: 0 20px 50px rgba(255, 105, 180, 0.3);
+      position: relative;
+      animation: floatCard 4s ease-in-out infinite alternate;
+    }
+
+    .present-card::before {
+      content: '💖';
+      position: absolute;
+      top: -20px;
+      left: -20px;
+      font-size: 2rem;
+    }
+
+    .present-card::after {
+      content: '👑';
+      position: absolute;
+      bottom: -20px;
+      right: -20px;
+      font-size: 2rem;
+    }
+
+    /* Word Assembly Animation */
+    .story-text {
+      font-size: 1.4rem;
+      line-height: 1.8;
+      color: #ffffff;
+      min-height: 120px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .word {
+      display: inline-block;
+      opacity: 0;
+      transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.2);
+      animation: assembleWord 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.27) forwards;
+    }
+
+    @keyframes assembleWord {
+      to {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
+    }
+
+    /* STEP 3: Cake */
+    .cake-container {
+      position: relative;
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .cake {
+      width: 250px;
+      height: 140px;
+      background: linear-gradient(to bottom, #ff9a9e, #fecfef);
+      border-radius: 20px 20px 10px 10px;
+      position: relative;
+      box-shadow: 0 15px 35px rgba(255, 105, 180, 0.4);
+      display: flex;
+      justify-content: center;
+    }
+
+    .cake-ribbon {
+      position: absolute;
+      bottom: 25px;
+      width: 100%;
+      height: 22px;
+      background: linear-gradient(90deg, #ff416c, #ff4b2b);
+    }
+
+    .cake-ribbon-bow {
+      position: absolute;
+      bottom: 18px;
+      width: 34px;
+      height: 34px;
+      background: #ff416c;
+      border-radius: 50%;
+    }
+
+    .candle {
+      width: 14px;
+      height: 50px;
+      background: linear-gradient(to bottom, #00c6ff, #0072ff);
+      position: absolute;
+      top: -50px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .flame {
+      width: 16px;
+      height: 24px;
+      background: #ff9900;
+      border-radius: 50% 50% 20% 20%;
+      position: absolute;
+      top: -22px;
+      left: -1px;
+      box-shadow: 0 0 15px #ff9900;
+      animation: glow 0.5s infinite alternate;
+    }
+
+    .flame.off { display: none; }
+
+    .cake-slice {
+      display: none;
+      font-size: 3.5rem;
+      cursor: pointer;
+      margin-top: 15px;
+      animation: bounce 1s infinite;
+    }
+
+    .btn {
+      background: linear-gradient(45deg, #ff758c, #ff7eb3);
+      color: #fff;
+      border: none;
+      padding: 14px 32px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(255, 117, 140, 0.5);
+      margin-top: 25px;
+      transition: all 0.3s;
+    }
+
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(255, 117, 140, 0.8);
+    }
+
+    /* GAME 1: Catching Stars */
+    .game-box {
+      width: 320px;
+      height: 380px;
+      border: 2px dashed rgba(255, 182, 193, 0.5);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .catch-item {
+      position: absolute;
+      font-size: 2.2rem;
+      cursor: pointer;
+      top: -50px;
+      animation: fallDown 3.5s linear infinite;
+    }
+
+    @keyframes fallDown {
+      to { transform: translateY(450px); }
+    }
+
+    /* GAME 2: Floating Wishes */
+    .floating-item {
+      position: absolute;
+      font-size: 3.2rem;
+      cursor: pointer;
+      animation: floatGame 6s infinite ease-in-out alternate;
+    }
+
+    /* STEP 5: Final Black Screen with Bomb Effect */
+    #step-5 {
+      background: #000000;
+      z-index: 9999;
+    }
+
+    #step-5 h2 {
+      font-size: 2.5rem;
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+
+    .red-warning {
+      color: #ff0033 !important;
+      font-weight: bold;
+      font-size: 2.2rem;
+      text-shadow: 0 0 25px #ff0033 !important;
+      margin-top: 20px;
+      animation: flash 0.5s infinite alternate;
+      display: none;
+    }
+
+    .bomb-icon {
+      font-size: 6rem;
+      display: none;
+      animation: bombShake 0.2s infinite alternate;
+      margin-top: 20px;
+    }
+
+    .explosion-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle, #ffffff, #ff3300, #000000);
+      z-index: 10000;
+      animation: explodeFlash 0.8s forwards;
+    }
+
+    /* STEP 6: Crashed Dead Screen */
+    #step-crashed {
+      background: #000000;
+      z-index: 10001;
+    }
+
+    /* Reset Button */
+    .reset-btn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: 1px solid #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 99999;
+      font-size: 12px;
+    }
+
+    /* Animations */
+    @keyframes fillProgress { from { width: 0%; } to { width: 100%; } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes glow { from { opacity: 0.8; transform: scale(0.95); } to { opacity: 1; transform: scale(1.1); } }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    @keyframes float { 0% { transform: translateY(0); } 100% { transform: translateY(-30px); } }
+    @keyframes floatCard { 0% { transform: translateY(0); } 100% { transform: translateY(-12px); } }
+    @keyframes floatGame {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      50% { transform: translate(120px, 150px) rotate(180deg); }
+      100% { transform: translate(-100px, 250px) rotate(360deg); }
+    }
+    @keyframes flash { from { opacity: 0.3; } to { opacity: 1; } }
+    @keyframes bombShake { 0% { transform: scale(1) rotate(-5deg); } 100% { transform: scale(1.2) rotate(5deg); } }
+    @keyframes explodeFlash {
+      0% { opacity: 0; transform: scale(0.1); }
+      50% { opacity: 1; transform: scale(2); }
+      100% { opacity: 0; transform: scale(3); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Lights -->
+  <div id="lights-container"></div>
+
+  <!-- Explosion Flash Overlay -->
+  <div class="explosion-overlay" id="explosion"></div>
+
+  <!-- Audio Elements -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="bd.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="pop-sound" preload="auto">
+    <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- STEP 1: Intro Wish -->
+  <div class="screen active" id="step-1">
+    <h1>Today is September 17th 🎂</h1>
+    <p>A super special day for a wonderfully amazing girl! Get ready for a magical experience filled with brightness!</p>
+    <div class="progress-bar">
+      <div class="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Gift Box -->
+  <div class="screen" id="step-2">
+    <div class="gift-box" onclick="openGift()">
+      <div class="gift-ribbon-v"></div>
+      <div class="gift-ribbon-h"></div>
+    </div>
+    <h2 style="margin-top: 30px; color: #ffb6c1;">Tap the Gift Box to Open Your Present Card! 🎁✨</h2>
+  </div>
+
+  <!-- STEP 2.5: Present Card with Word Assembly Animation -->
+  <div class="screen" id="step-story">
+    <div class="present-card">
+      <div class="story-text" id="story-line"></div>
+      <button class="btn" onclick="nextStoryLine()">Next  📖</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Cake Section -->
+  <div class="screen" id="step-3">
+    <h2 id="cake-status" style="color: #ffb6c1; margin-bottom: 20px;">Make a wish and blow out the candle! 🕯️✨</h2>
+    
+    <div class="cake-container">
+      <div class="cake">
+        <div class="cake-ribbon"></div>
+        <div class="cake-ribbon-bow"></div>
+        <div class="candle" onclick="blowCandle()">
+          <div class="flame" id="flame"></div>
+        </div>
+      </div>
+      <div class="cake-slice" id="cake-slice" onclick="feedCake()">🍰</div>
+    </div>
+
+    <button class="btn" id="cut-btn" style="display: none;" onclick="cutCake()">Cut the Cake 🔪</button>
+  </div>
+
+  <!-- STEP 4: Game Level 1 - Catching Happiness -->
+  <div class="screen" id="step-game1">
+    <h2 style="color: #ffb6c1; margin-bottom: 10px;">Level 1: Catch 5 Magic Stars! ⭐</h2>
+    <p style="margin-bottom: 15px; color: #ffd700;">Score: <span id="score1">0</span>/5</p>
+    <div class="game-box" id="game-box1"></div>
+  </div>
+
+  <!-- STEP 4.5: Game Level 2 - Pop Wishes -->
+  <div class="screen" id="step-4">
+    <h2 style="position: absolute; top: 10%; color: #ffb6c1;">Level 2: Pop All Floating Birthday Wishes! 🎈✨</h2>
+    <div id="game-area" style="width: 100%; height: 100%;"></div>
+  </div>
+
+  <!-- STEP 5: Final Black Screen with Bomb Countdown -->
+  <div class="screen" id="step-5">
+    <h2 id="thank-text">Thank you for accepting these magical birthday wishes! ❤️👑</h2>
+    <div class="bomb-icon" id="bomb">💣</div>
+    <div class="red-warning" id="warning">Now forget this memory forever... 💣🔥</div>
+  </div>
+
+  <!-- STEP 6: Dead Crashed Screen -->
+  <div class="screen" id="step-crashed"></div>
+
+  <!-- Quick Reset Button for testing -->
+  <button class="reset-btn" onclick="resetSite()">$ </button>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const isAdmin = urlParams.get('admin') === 'true';
+
+    function playPop() {
+      const pop = document.getElementById('pop-sound');
+      pop.currentTime = 0;
+      pop.play().catch(() => {});
+    }
+
+    function checkState() {
+      if (!isAdmin && localStorage.getItem('site_crashed') === 'true') {
+        showScreen('step-crashed');
+      } else {
+        showScreen('step-1');
+      }
+    }
+
+    function resetSite() {
+      localStorage.removeItem('site_crashed');
+      alert('Site state cleared! Reloading...');
+      window.location.href = window.location.pathname;
+    }
+
+    // Floating Lights Background
+    const lightsContainer = document.getElementById('lights-container');
+    for (let i = 0; i < 30; i++) {
+      const light = document.createElement('div');
+      light.classList.add('light');
+      const size = Math.random() * 15 + 8 + 'px';
+      light.style.width = size;
+      light.style.height = size;
+      light.style.top = Math.random() * 100 + 'vh';
+      light.style.left = Math.random() * 100 + 'vw';
+      light.style.animationDuration = Math.random() * 4 + 4 + 's';
+      lightsContainer.appendChild(light);
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(id);
+      if (target) {
+        target.classList.add('active');
+      }
+    }
+
+    // Step 1 -> Step 2
+    setTimeout(() => {
+      const s1 = document.getElementById('step-1');
+      if (s1.classList.contains('active')) {
+        showScreen('step-2');
+      }
+    }, 20000);
+
+    // Gift Opening -> Present Card Section
+    function openGift() {
+      playPop();
+      document.getElementById('bg-music').play().catch(() => {});
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+      showScreen('step-story');
+      startStory();
+    }
+
+    // Present Card Storytelling with Word Assembly Effect
+    const storyLines = [
+      "Every birthday unlocks a brand new chapter filled with infinite possibilities...",
+      "May your life be as bright, sweet, and beautiful as your endless smile...",
+      "May you find strength to achieve your biggest goals and reach for the stars...",
+      "Never stop shining like the rare, beautiful gem that you truly are...",
+      "Wishing you a magnificent, joyful year ahead! Happy Birthday Queen! ✨💖"
+    ];
+
+    let currentStoryIndex = 0;
+
+    function renderAnimatedText(sentence) {
+      const container = document.getElementById('story-line');
+      container.innerHTML = '';
+      const words = sentence.split(' ');
+
+      words.forEach((word, idx) => {
+        const span = document.createElement('span');
+        span.classList.add('word');
+        span.innerText = word;
+
+        const tx = (Math.random() - 0.5) * 300 + 'px';
+        const ty = (Math.random() - 0.5) * 300 + 'px';
+        const rot = (Math.random() - 0.5) * 360 + 'deg';
+
+        span.style.setProperty('--tx', tx);
+        span.style.setProperty('--ty', ty);
+        span.style.setProperty('--rot', rot);
+        span.style.animationDelay = (idx * 0.08) + 's';
+
+        container.appendChild(span);
+      });
+    }
+
+    function startStory() {
+      currentStoryIndex = 0;
+      renderAnimatedText(storyLines[0]);
+    }
+
+    function nextStoryLine() {
+      playPop();
+      currentStoryIndex++;
+      if (currentStoryIndex < storyLines.length) {
+        renderAnimatedText(storyLines[currentStoryIndex]);
+      } else {
+        showScreen('step-3');
+      }
+    }
+
+    // Cake interactions
+    function blowCandle() {
+      playPop();
+      document.getElementById('flame').classList.add('off');
+      document.getElementById('cake-status').innerText = "Now click 'Cut the Cake'!";
+      document.getElementById('cut-btn').style.display = 'inline-block';
+    }
+
+    function cutCake() {
+      playPop();
+      confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } });
+      document.getElementById('cut-btn').style.display = 'none';
+      document.getElementById('cake-status').innerText = "Tap the cake slice to eat! 🍰";
+      document.getElementById('cake-slice').style.display = 'block';
+    }
+
+    function feedCake() {
+      playPop();
+      const slice = document.getElementById('cake-slice');
+      slice.style.transform = 'scale(2)';
+      slice.style.opacity = '0';
+      slice.style.transition = 'all 0.8s ease';
+
+      document.getElementById('cake-status').innerText = "Yummy! Let's play some mini games...";
+      setTimeout(() => {
+        showScreen('step-game1');
+        startGame1();
+      }, 1500);
+    }
+
+    // GAME LEVEL 1: Catching Stars
+    let score1 = 0;
+    let game1Interval;
+
+    function startGame1() {
+      score1 = 0;
+      document.getElementById('score1').innerText = score1;
+      const box = document.getElementById('game-box1');
+      box.innerHTML = '';
+
+      game1Interval = setInterval(() => {
+        if (score1 >= 5) {
+          clearInterval(game1Interval);
+          setTimeout(() => {
+            showScreen('step-4');
+            startLetterGame();
+          }, 800);
+          return;
+        }
+
+        const star = document.createElement('div');
+        star.classList.add('catch-item');
+        star.innerText = ['⭐', '🌸', '💖', '✨'][Math.floor(Math.random() * 4)];
+        star.style.left = Math.random() * 260 + 'px';
+        star.style.animationDuration = (Math.random() * 1.5 + 2) + 's';
+
+        star.addEventListener('click', () => {
+          playPop();
+          score1++;
+          document.getElementById('score1').innerText = score1;
+          star.remove();
+        });
+
+        box.appendChild(star);
+
+        setTimeout(() => {
+          if (star.parentNode) star.remove();
+        }, 3500);
+      }, 700);
+    }
+
+    // GAME LEVEL 2: Floating Items
+    function startLetterGame() {
+      const area = document.getElementById('game-area');
+      area.innerHTML = '';
+      const items = ['🎈', '🎁', '✨', '🌸', '👑', '💖', '⭐'];
+      let popped = 0;
+
+      items.forEach((item, index) => {
+        const el = document.createElement('span');
+        el.classList.add('floating-item');
+        el.innerText = item;
+        el.style.top = Math.random() * 60 + 20 + 'vh';
+        el.style.left = Math.random() * 80 + 10 + 'vw';
+        el.style.animationDuration = Math.random() * 4 + 4 + 's';
+
+        el.addEventListener('click', () => {
+          playPop();
+          confetti({ particleCount: 40, spread: 50, origin: { x: el.offsetLeft / window.innerWidth, y: el.offsetTop / window.innerHeight } });
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+          popped++;
+
+          if (popped === items.length) {
+            setTimeout(triggerFinale, 1000);
+          }
+        });
+        area.appendChild(el);
+      });
+    }
+
+    // Finale
+    function triggerFinale() {
+      showScreen('step-5');
+
+      setTimeout(() => {
+        document.getElementById('thank-text').style.display = 'none';
+        document.getElementById('bomb').style.display = 'block';
+        document.getElementById('warning').style.display = 'block';
+
+        setTimeout(() => {
+          document.getElementById('explosion').style.display = 'block';
+
+          setTimeout(() => {
+            document.getElementById('explosion').style.display = 'none';
+            showScreen('step-crashed');
+
+            if (!isAdmin) {
+              localStorage.setItem('site_crashed', 'true');
+            }
+          }, 800);
+
+        }, 2500);
+
+      }, 5000);
+    }
+
+    // Initialize state on load
+    checkState();
+  </script>
+</body>
+</html>
